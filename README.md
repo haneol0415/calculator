@@ -1,1 +1,1 @@
-# Toy Project : Making a Calculator Using PyQt
+# Toy Project : Creating a Calculator Using PyQt
