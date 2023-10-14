@@ -147,22 +147,6 @@ class WindowClass(QMainWindow, from_class) :
             self.eq_state = False
         else:
             self.eq_state = True
-        
-        
-        
-        # if self.init_state == False:
-        #     if self.result_state == False:
-        #         if self.error_state == False:
-        #             self.eq_state = True
-        #         else:
-        #             self.eq_state = False
-        #     else:
-        #       self.eq_state = False  
-        # else: 
-        #     self.eq_state = False
-
-        # if self.input[-1] == "." and self.input[-2] in self.op:
-        #     self.eq_state = False
 
 
     def setParstate(self):
@@ -229,7 +213,6 @@ class WindowClass(QMainWindow, from_class) :
             self.input += new_digit
     
 
-
     def operator_Clicked(self, button):            
         if button == self.opButton_plus: new_oper = "+"
         elif button == self.opButton_minus: new_oper = "-"
@@ -245,7 +228,6 @@ class WindowClass(QMainWindow, from_class) :
         self.input += new_oper  
 
     
-
     def openPar_Clicked(self):
         self.parStack.append("(")                           # 괄호 스택에 push
         if self.result_state:
@@ -262,24 +244,6 @@ class WindowClass(QMainWindow, from_class) :
                 self.input += "x("                          # 열린 괄호 앞에 "*"를 추가
             else:
                 self.input += "("
-      
-        # if self.zero_state:                                     # 마지막 숫자가 0으로 시작하는 경우
-        #     self.input = self.input[:-1]                        # 0을 지우고 열린 괄호 추가
-        #     self.input += "("
-        
-        # elif self.input[-1] in ".)123456789":                   # 소수점, 닫힌 괄호, 숫자로 끝나는 경우
-        #     if self.result:                                     # 수식이 이전 수식의 결과값인 경우
-        #         self.text_history.append("")                    # 히스토리창에 이전 수식 & 결과 출력
-        #         self.text_history.append(self.prev_input)
-        #         self.text_history.append(self.result)
-        #         self.result = ""
-        #         self.input = "("                                # 결과값 초기화 & 수식을 열린 괄호로 초기화
-        #     else:
-        #         self.input += "*("                              # 열린 괄호 앞에 "*"를 추가
-        
-        # else:
-        #     self.input += "("
-            
     
 
     def closePar_Clicked(self):
