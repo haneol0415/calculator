@@ -277,6 +277,13 @@ class WindowClass(QMainWindow, from_class) :
     
     
     def equal_Clicked(self):
+        while len(self.parStack) > 0:
+            if self.input[-1] == "(":
+                self.input += "0)"
+            else:
+                self.input += ")"
+            self.parStack.pop()
+        
         try:
             res = eval(self.input.replace("x", "*"))
             
