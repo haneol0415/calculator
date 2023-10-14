@@ -1,7 +1,7 @@
-import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5 import uic
+
 
 from_class = uic.loadUiType("./src/calculator.ui")[0]
 
@@ -21,7 +21,7 @@ class WindowClass(QMainWindow, from_class) :
         self.init_state = True                                  # 초기 상태
         self.result_state = False                               # 수식이 이전 수식의 결과로 초기화 되어있는 상태
         self.point_state = True                                 # 소수점 입력 가능 상태
-        self.zero_state = True                                  # 초기 상태 혹은 숫자가 0으로 시작하는 상태
+        self.zero_state = True                                  # 초기 상태 혹은 마지막 숫자가 0으로 시작하는 상태
         self.oper_state = True                                  # 사칙 연산자 입력 가능 상태
         self.eq_state = True                                    # 등호 연산자 입력 가능 상태
         self.error_state = False                                # 수식 계산 중 에러가 발행한 상태
@@ -86,7 +86,6 @@ class WindowClass(QMainWindow, from_class) :
         
         elif button == self.opButton_eq:                 # = 버튼
             if self.eq_state:
-                # self.init_state == False and self.result_state == False and self.error_state == False
                 self.equal_Clicked()
                 self.text_current.setText(self.prev_input)
                 self.text_current.append(self.result)
@@ -117,8 +116,6 @@ class WindowClass(QMainWindow, from_class) :
             self.init_state = False
 
 
-
-    # result_state = True : 수식이 이전 수식의 결과로 초기화 되어있는 상태
     def setResultstate(self): 
         if self.result != "":
             self.result_state = True
@@ -126,8 +123,6 @@ class WindowClass(QMainWindow, from_class) :
             self.result_state = False
 
 
-
-    # error_state = True : 계산 에러가 발생한 상태
     def setErrorstate(self):
         if self.result == "계산할 수 없는 수식입니다.":
             self.error_state = True
@@ -135,10 +130,7 @@ class WindowClass(QMainWindow, from_class) :
             self.error_state = False
     
     
-
-    # oper_state = True : 사칙 연산자 입력 가능 상태
     def setOperstate(self):
-        # input가 초기 상태 or 마지막 입력이 연산자인 상태 or 에러 발생 상태
         last = self.input[-1]
         if self.init_state or last in self.op+"(" or self.error_state == True:
             self.oper_state = False
@@ -147,21 +139,31 @@ class WindowClass(QMainWindow, from_class) :
 
 
     def setEqstate(self):
-        if self.init_state == False:
-            if self.result_state == False:
-                if self.error_state == False:
-                    self.eq_state = True
-                else:
-                    self.eq_state = False
-            else:
-              self.eq_state = False  
-        else: 
+        if self.init_state or self.result_state or self.error_state:
             self.eq_state = False
-
-        if self.input[-1] == "." and self.input[-2] in self.op:
+        elif self.input[-1] in self.op:
             self.eq_state = False
+        elif self.input[-1] == "." and self.input[-2] in self.op:
+            self.eq_state = False
+        else:
+            self.eq_state = True
+        
+        
+        
+        # if self.init_state == False:
+        #     if self.result_state == False:
+        #         if self.error_state == False:
+        #             self.eq_state = True
+        #         else:
+        #             self.eq_state = False
+        #     else:
+        #       self.eq_state = False  
+        # else: 
+        #     self.eq_state = False
 
-    
+        # if self.input[-1] == "." and self.input[-2] in self.op:
+        #     self.eq_state = False
+
 
     def setParstate(self):
         if self.input[-1] == "." and self.input[-2] in self.op:
@@ -176,28 +178,26 @@ class WindowClass(QMainWindow, from_class) :
                 self.par_state["close"] = False   
         
 
-
-    # point_state = True : 소수점 입력 가능 상태
     def setPointstate(self):
-        for i in self.input[::-1]:                         # input를 역순으로 탐색
-            if i == ".":                                   # 소수점이 이미 있으면 point_state = False & 종료
-                self.point_state = False
-                return
-            else:
-                self.point_state = True
-            if i in self.op:                               # 연산자를 만나면 조기 종료
-                return
+        if self.error_state:
+            self.point_state = True
+        else:
+            for i in self.input[::-1]:                         # 수식을 역순으로 탐색
+                if i == ".":                                   # 소수점이 이미 있으면 point_state = False
+                    self.point_state = False
+                    return
+                else:
+                    self.point_state = True
+                if i in self.op:                               # 연산자를 만나면 조기 종료
+                    return
         
     
-
-    # zero_state = True : 수식이 초기 상태 or 연산자 바로 다음에 0이 있는 상태
     def setZerostate(self):
         if self.init_state or (self.input[-1] == "0" and self.input[-2] in self.op):
             self.zero_state = True
         else:
             self.zero_state = False
         
-    
 
     def digit_Clicked(self, button):
         if button == self.numButton_0: new_digit = "0"
@@ -211,19 +211,19 @@ class WindowClass(QMainWindow, from_class) :
         elif button == self.numButton_8: new_digit = "8"
         else: new_digit = "9"
         
-        if self.result_state == True:                       # 결과가 계산된 상태이면 
+        if self.result_state == True:                       # 결과가 계산된 경우 
             self.text_history.append("")                    # 숫자 버튼을 눌렀을 때 이전 수식 & 결과를 히르토리 창에 출력
             self.text_history.append(self.prev_input)
             self.text_history.append(self.result)
             self.result = ""                                # 결과 값 초기화
             self.input = new_digit
         
-        elif self.zero_state:                               # 수식이 초기 상태 or 연산자 바로 다음에 0이 있는 상태
+        elif self.zero_state:                               # 수식이 초기 상태이거나 마지막 숫자가 0으로 시작하는 경우
             self.input = self.input[:-1]
             self.input += new_digit
         
-        elif self.input[-1] == ")":
-            self.input += ("*" + new_digit)
+        elif self.input[-1] == ")":                         # 수식이 ")"로 끝나는 경우
+            self.input += ("x" + new_digit)                 # 수식에 "x digit" 추가
 
         else:
             self.input += new_digit
@@ -247,37 +247,51 @@ class WindowClass(QMainWindow, from_class) :
     
 
     def openPar_Clicked(self):
-        self.parStack.append("(")
-        if self.zero_state:
-            self.input = self.input[:-1]
-            self.input += "("
-        
-        elif self.input[-1] in ".)123456789":
-            if self.result:
-                self.text_history.append("")
-                self.text_history.append(self.prev_input)
-                self.text_history.append(self.result)
-                self.result = ""
-                self.input = "("
-            else:
-                self.input += "*("
-        
+        self.parStack.append("(")                           # 괄호 스택에 push
+        if self.result_state:
+            self.text_history.append("")                    # 히스토리창에 이전 수식 & 결과 출력
+            self.text_history.append(self.prev_input)
+            self.text_history.append(self.result)
+            self.result = ""
+            self.input = "("
         else:
-            self.input += "("
+            if self.zero_state:                             # 마지막 숫자가 0으로 시작하는 경우
+                self.input = self.input[:-1]                # 0을 지우고 열린 괄호 추가
+                self.input += "("
+            elif self.input[-1] in ".)123456789":           # 소수점, 닫힌 괄호, 숫자로 끝나는 경우
+                self.input += "x("                          # 열린 괄호 앞에 "*"를 추가
+            else:
+                self.input += "("
+      
+        # if self.zero_state:                                     # 마지막 숫자가 0으로 시작하는 경우
+        #     self.input = self.input[:-1]                        # 0을 지우고 열린 괄호 추가
+        #     self.input += "("
+        
+        # elif self.input[-1] in ".)123456789":                   # 소수점, 닫힌 괄호, 숫자로 끝나는 경우
+        #     if self.result:                                     # 수식이 이전 수식의 결과값인 경우
+        #         self.text_history.append("")                    # 히스토리창에 이전 수식 & 결과 출력
+        #         self.text_history.append(self.prev_input)
+        #         self.text_history.append(self.result)
+        #         self.result = ""
+        #         self.input = "("                                # 결과값 초기화 & 수식을 열린 괄호로 초기화
+        #     else:
+        #         self.input += "*("                              # 열린 괄호 앞에 "*"를 추가
+        
+        # else:
+        #     self.input += "("
             
     
 
     def closePar_Clicked(self):
-        self.parStack.pop()
-        if self.input[-1] == "(":
+        self.parStack.pop()                                     # 괄호 스택에서 원소 pop
+        if self.input[-1] == "(":                               # 수식 마지막이 열린 괄호인 경우 0을 추가하고 닫는다.
             self.input += "0)"
         else:
             self.input += ")"
 
     
-    
     def equal_Clicked(self):
-        while len(self.parStack) > 0:
+        while len(self.parStack) > 0:                           # 닫힌 괄호 자동 완성
             if self.input[-1] == "(":
                 self.input += "0)"
             else:
@@ -287,7 +301,7 @@ class WindowClass(QMainWindow, from_class) :
         try:
             res = eval(self.input.replace("x", "*"))
             
-            if res == int(res):
+            if res == int(res):                                 # 소수점 이하가 0이면 정수로 출력
                 self.result = str(int(res))
             else:
                 self.result = str(res)
@@ -304,17 +318,16 @@ class WindowClass(QMainWindow, from_class) :
             self.input = self.result
     
 
-
     def point_Clicked(self):
-        new_digit = "."
         if self.result_state == True:
             self.text_history.append("")
             self.text_history.append(self.prev_input)
             self.text_history.append(self.result)
             self.result = ""
-        self.input += new_digit
+            self.input = "0."
+        else:
+            self.input += "."
     
-
 
     def ac_Clicked(self):
         if self.result_state:
@@ -326,9 +339,8 @@ class WindowClass(QMainWindow, from_class) :
         self.parStack = []
     
     
-
     def undo_Clicked(self):
-        if self.input[-1] == ")":
+        if self.input[-1] == ")":                               # 괄호 삭제하는 경우
                 self.parStack.append("(")
         elif self.input[-1] == "(":
             self.parStack.pop()
