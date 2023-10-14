@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5 import uic
 
-from_class = uic.loadUiType("calculator.ui")[0]
+from_class = uic.loadUiType("./src/calculator.ui")[0]
 
 
 class WindowClass(QMainWindow, from_class) :
@@ -337,11 +337,3 @@ class WindowClass(QMainWindow, from_class) :
             self.input = self.input[:-1]
         else:
             self.input = "0"
-
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    myWindows = WindowClass()
-    myWindows.show()
-    sys.exit(app.exec_())
