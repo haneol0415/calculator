@@ -12,31 +12,35 @@ class WindowClass(QMainWindow, from_class) :
         self.setupUi(self)
         self.setWindowTitle("Calculator")
         
-        self.priority = {"+" : 0, "-" : 0, "x" : 1, "/" : 1}
-        
         self.input = "0"
         self.prev_input = ""
         self.result = ""
+        self.op = "+-x/"
+        self.parStack = []
         
-        self.init_state = True      # 초기 상태
-        self.result_state = False   # 수식이 이전 수식의 결과로 초기화 되어있는 상태
-        self.point_state = True     # 소수점 입력 가능 상태
-        self.zero_state = True      # 초기 상태 혹은 숫자가 0으로 시작하는 상태
-        self.oper_state = True      # 연산자 입력 가능 상태
-        self.error_state = False    # 수식 계산 중 에러가 발행한 상태
+        self.init_state = True                                  # 초기 상태
+        self.result_state = False                               # 수식이 이전 수식의 결과로 초기화 되어있는 상태
+        self.point_state = True                                 # 소수점 입력 가능 상태
+        self.zero_state = True                                  # 초기 상태 혹은 숫자가 0으로 시작하는 상태
+        self.oper_state = True                                  # 사칙 연산자 입력 가능 상태
+        self.eq_state = True                                    # 등호 연산자 입력 가능 상태
+        self.error_state = False                                # 수식 계산 중 에러가 발행한 상태
+        self.par_state = {"open" : True, "close" : False}       # open : "("" 사용 가능 상태, close : ")" 사용 가능 상태
 
-        
-        # 버튼 함수 연결
         self.DIGITBUTTONS = (self.numButton_0, self.numButton_1, self.numButton_2, self.numButton_3, self.numButton_4,
                               self.numButton_5, self.numButton_6, self.numButton_7, self.numButton_8, self.numButton_9)
         self.OPBUTTONS = (self.opButton_eq, self.opButton_plus, self.opButton_minus, self.opButton_mul, self.opButton_div)
         self.CLEARBUTTONS = (self.acButton, self.undoButton)
+        self.PARENTHESIS = (self.parButton_open, self.parButton_close)
         
         for numbutton in self.DIGITBUTTONS:
             numbutton.clicked.connect(self.button_Clicked)
         
         for opbutton in self.OPBUTTONS:
             opbutton.clicked.connect(self.button_Clicked)
+        
+        for parbutton in self.PARENTHESIS:
+            parbutton.clicked.connect(self.button_Clicked)
 
         self.acButton.clicked.connect(self.button_Clicked)
         self.undoButton.clicked.connect(self.button_Clicked)
@@ -54,6 +58,8 @@ class WindowClass(QMainWindow, from_class) :
         self.setOperstate()
         self.setPointstate()
         self.setZerostate()
+        self.setParstate()
+        self.setEqstate()
         
         if button in self.DIGITBUTTONS:                  # 0-9 버튼
             self.digit_Clicked(button)
@@ -65,14 +71,26 @@ class WindowClass(QMainWindow, from_class) :
                 self.operator_Clicked(button)
                 self.text_current.setText(self.input)
                 self.text_current.append(self.result)
+
+        elif button in self.PARENTHESIS:                # (, ) 버튼
+            if button == self.parButton_open:
+                if self.par_state["open"] == True:
+                    self.openPar_Clicked()
+                    self.text_current.setText(self.input)
+                    self.text_current.append(self.result)
+            else:
+                if self.par_state["close"] == True:
+                    self.closePar_Clicked()
+                    self.text_current.setText(self.input)
+                    self.text_current.append(self.result)
         
         elif button == self.opButton_eq:                 # = 버튼
-            if self.init_state == False and self.result_state == False and self.error_state == False:
+            if self.eq_state:
+                # self.init_state == False and self.result_state == False and self.error_state == False
                 self.equal_Clicked()
                 self.text_current.setText(self.prev_input)
                 self.text_current.append(self.result)
                 
-        
         elif button == self.acButton:                    # AC 버튼
             self.ac_Clicked()
             self.text_current.setText(self.input)
@@ -93,36 +111,73 @@ class WindowClass(QMainWindow, from_class) :
     
 
     def setInitstate(self):
-        self.init_state = True if self.input == "0" else False
+        if self.input == "0": 
+            self.init_state = True 
+        else: 
+            self.init_state = False
 
 
 
-    # 수식이 이전 수식의 결과로 초기화 되어있는 상태
-    def setResultstate(self):
-        self.result_state = True if self.result != "" else False
+    # result_state = True : 수식이 이전 수식의 결과로 초기화 되어있는 상태
+    def setResultstate(self): 
+        if self.result != "":
+            self.result_state = True
+        else:
+            self.result_state = False
 
 
 
-    # self.error_state = True : 계산 에러가 발생한 상태
+    # error_state = True : 계산 에러가 발생한 상태
     def setErrorstate(self):
         if self.result == "계산할 수 없는 수식입니다.":
             self.error_state = True
         else:
             self.error_state = False
-
+    
     
 
-    # self.oper_state = True : 연산자 입력 가능 상태
+    # oper_state = True : 사칙 연산자 입력 가능 상태
     def setOperstate(self):
         # input가 초기 상태 or 마지막 입력이 연산자인 상태 or 에러 발생 상태
-        if self.init_state or self.input[-1] in self.priority.keys() or self.error_state == True:
+        last = self.input[-1]
+        if self.init_state or last in self.op+"(" or self.error_state == True:
             self.oper_state = False
         else:
             self.oper_state = True
+
+
+    def setEqstate(self):
+        if self.init_state == False:
+            if self.result_state == False:
+                if self.error_state == False:
+                    self.eq_state = True
+                else:
+                    self.eq_state = False
+            else:
+              self.eq_state = False  
+        else: 
+            self.eq_state = False
+
+        if self.input[-1] == "." and self.input[-2] in self.op:
+            self.eq_state = False
+
+    
+
+    def setParstate(self):
+        if self.input[-1] == "." and self.input[-2] in self.op:
+            self.par_state["open"] = False
+            self.par_state["close"] = False
+        else:
+            self.par_state["open"] = True
+
+            if len(self.parStack) > 0 and self.input[-1] not in self.op:
+                self.par_state["close"] = True
+            else:
+                self.par_state["close"] = False   
         
 
 
-    # self.point_state = True : 소수점 입력 가능 상태
+    # point_state = True : 소수점 입력 가능 상태
     def setPointstate(self):
         for i in self.input[::-1]:                         # input를 역순으로 탐색
             if i == ".":                                   # 소수점이 이미 있으면 point_state = False & 종료
@@ -130,21 +185,20 @@ class WindowClass(QMainWindow, from_class) :
                 return
             else:
                 self.point_state = True
-            if i in self.priority.keys():                   # 연산자를 만나면 조기 종료
+            if i in self.op:                               # 연산자를 만나면 조기 종료
                 return
         
     
 
-    # self.zero_state = True : 수식이 초기 상태 or 연산자 바로 다음에 0이 있는 상태
+    # zero_state = True : 수식이 초기 상태 or 연산자 바로 다음에 0이 있는 상태
     def setZerostate(self):
-        if self.init_state or (self.input[-1] == "0" and self.input[-2] in self.priority.keys()):
+        if self.init_state or (self.input[-1] == "0" and self.input[-2] in self.op):
             self.zero_state = True
         else:
             self.zero_state = False
         
     
 
-    # 숫자: 1-9 버튼
     def digit_Clicked(self, button):
         if button == self.numButton_0: new_digit = "0"
         elif button == self.numButton_1: new_digit = "1"
@@ -168,13 +222,14 @@ class WindowClass(QMainWindow, from_class) :
             self.input = self.input[:-1]
             self.input += new_digit
         
+        elif self.input[-1] == ")":
+            self.input += ("*" + new_digit)
+
         else:
             self.input += new_digit
     
 
 
-    # 사칙연산자: +, -, x, / 버튼
-    # oper_state = True이면, 연산자를 input 추가한다.
     def operator_Clicked(self, button):            
         if button == self.opButton_plus: new_oper = "+"
         elif button == self.opButton_minus: new_oper = "-"
@@ -191,6 +246,36 @@ class WindowClass(QMainWindow, from_class) :
 
     
 
+    def openPar_Clicked(self):
+        self.parStack.append("(")
+        if self.zero_state:
+            self.input = self.input[:-1]
+            self.input += "("
+        
+        elif self.input[-1] in ".)123456789":
+            if self.result:
+                self.text_history.append("")
+                self.text_history.append(self.prev_input)
+                self.text_history.append(self.result)
+                self.result = ""
+                self.input = "("
+            else:
+                self.input += "*("
+        
+        else:
+            self.input += "("
+            
+    
+
+    def closePar_Clicked(self):
+        self.parStack.pop()
+        if self.input[-1] == "(":
+            self.input += "0)"
+        else:
+            self.input += ")"
+
+    
+    
     def equal_Clicked(self):
         try:
             res = eval(self.input.replace("x", "*"))
@@ -206,6 +291,7 @@ class WindowClass(QMainWindow, from_class) :
             self.result = "계산할 수 없는 수식입니다."
         
         self.prev_input = self.input
+        self.parStack = []
 
         if self.error_state == False:
             self.input = self.result
@@ -230,70 +316,20 @@ class WindowClass(QMainWindow, from_class) :
             self.text_history.append(self.result)
         self.input = "0"
         self.result = ""
+        self.parStack = []
     
     
 
     def undo_Clicked(self):
+        if self.input[-1] == ")":
+                self.parStack.append("(")
+        elif self.input[-1] == "(":
+            self.parStack.pop()
+
         if len(self.input) > 1:
             self.input = self.input[:-1]
         else:
             self.input = "0"
-
-            
-
-    def inToPost(self, input):
-        postfix = []
-        operators = []
-        num = ''
-        
-        for i in input:
-            if i not in self.priority.keys():
-                num += i
-            else:
-                postfix.append(num)
-                num = ''
-                
-                if len(operators) == 0 or self.priority[i] > self.priority[operators[-1]]:
-                    operators.append(i)
-                else:
-                    while len(operators) != 0 and self.priority[i] <= self.priority[operators[-1]]:
-                        postfix.append(operators.pop())      
-                    operators.append(i)
-        
-        postfix.append(num)
-        while len(operators) != 0:
-            postfix.append(operators.pop())
-        
-        return postfix
-
-    
-
-    def getResult(self, postfix):
-        operands = []
-        for i in postfix:
-            if i not in self.priority.keys():
-                operands.append(i)
-            else:
-                second = operands.pop()
-                first = operands.pop()
-        
-                if i == '+':
-                    try: result = float(first) + float(second)
-                    except: result = "계산할 수 없는 수식입니다."
-                elif i == '-':
-                    try: result = float(first) - float(second)
-                    except: result = "계산할 수 없는 수식입니다."
-                elif i == 'x':
-                    try: result = float(first) * float(second)
-                    except: result = "계산할 수 없는 수식입니다."  
-                else:
-                    try: result = float(first) / float(second)
-                    except: result = "계산할 수 없는 수식입니다."
-                
-                operands.append(str(result))
-
-        return operands.pop()
-    
 
 
 
@@ -302,32 +338,3 @@ if __name__ == "__main__":
     myWindows = WindowClass()
     myWindows.show()
     sys.exit(app.exec_())
-
-
-
-########## 출 력 ###########
-# if button == self.opButton_eq:
-#     if self.error_state == False:
-#         self.text_current.setText(self.input)
-#         self.text_current.append(self.result)
-#         self.input = self.result
-
-# elif button == self.undoButton:
-#     if self.result_state:
-#         self.text_current.setText(self.prev_input)
-#         self.text_current.append(self.result)
-#     else:
-#         self.text_current.setText(self.input)
-
-# elif button == self.pointButton:
-#     if self.result_state == False:
-#         self.text_current.setText(self.input)
-
-# else:
-#     self.text_current.setText(self.input)
-
-# self.text_current.setText(self.input)
-# self.text_current.append(self.result)
-# if button == self.opButton_eq:
-#     if self.error_state == False:
-#         self.input = self.result

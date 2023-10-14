@@ -493,6 +493,54 @@ color: rgb(0, 0, 0);
 </string>
    </property>
   </widget>
+  <widget class="QPushButton" name="parButton_open">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>200</y>
+     <width>100</width>
+     <height>100</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>20</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(94, 92, 100);
+color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>(</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="parButton_close">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>200</y>
+     <width>100</width>
+     <height>100</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>20</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(94, 92, 100);
+color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>)</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
